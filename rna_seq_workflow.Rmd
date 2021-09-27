@@ -5,8 +5,33 @@ date: "9/14/2021"
 output: html_document
 ---
 
-RNA-Seq Workflow
+# RNA-Seq Workflow
 
+---
+
+## Transcriptomic Data processing
+1. Data download from SRA.
+2. Trimming and quality control with TrimGalore.
+3. Alignment with Kallisto (example alignment for STAR and BBmap included).
+4. Quantification of kallisto with tximport. 
+5. Differential expression analysis with DESeq2.
+
+---
+
+## Data
+### [Whole genome sequencing & RNA sequencing of human well differentiated liposarcoma](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA751390)  
+#### Select all samples for [SRA selector](https://www.ncbi.nlm.nih.gov/sra?linkname=bioproject_sra_all&from_uid=751390):  
+- SRR15320001  
+- SRR15320004  
+- SRR15320005  
+- SRR15320006  
+- SRR15320007  
+- SRR15320009  
+- SRR15320010  
+- SRR15320008  
+- SRR15320012  
+- SRR15320011  
+- SRR15320002  
 
 ---
 
@@ -20,81 +45,6 @@ wget http://igenomes.illumina.com.s3-website-us-east-1.amazonaws.com/Homo_sapien
 tar -zxvf Homo_sapiens_UCSC_hg38.tar.gz
 
 ```
-
-
-## Transcriptomic Data processing
-
-# Data Download from SRA
-- Need accession numbers for input, split paired data
-- https://edwards.sdsu.edu/research/fastq-dump/
-
-# FASTQC
-- References
-    - https://www.bioinformatics.babraham.ac.uk/projects/fastqc/ 
-
-# Trimming 
-- References
-    - https://academic.oup.com/nargab/article/2/3/lqaa068/5901066 
-- TrimGalore
-    - Performs adapter removal and quality filtering via calling the Cutadapt tool
-    - Cutadapt is here: ~/.local/bin/cutadapt 
-    - ~/TrimGalore-0.6.6/trim_galore --path_to_cutadapt  ~/.local/bin/cutadapt 
-- Trimmomatic
-    - Trimmomatic has two trimming modes: ‘adapters and SW’ mode and ‘adapters and MI’ mode. 
-    - In ‘adapters and SW’ mode, a sliding window approach is used to remove read bases that 
-      have a low sequencing quality. In ‘adapters and MI’ mode, a maximum information quality 
-      filtering approach is applied for removing low quality bases. Adapter sequences are 
-      detected and removed in both modes.
-
-# Alignment
-- References
-    - https://pubmed.ncbi.nlm.nih.gov/32138290/ 
-    - https://www.nature.com/articles/s41598-020-76881-x
-- Bowtie2
-- BWA
-- BWA-MEM
-- STAR
-- BBMap
-- Tophat2
-- Hisat2
-
-# Quantification
-- References
-    - https://www.nature.com/articles/s41598-020-76881-x
-    - https://bioconductor.org/packages/release/bioc/vignettes/tximport/inst/doc/tximport.html
-- Subread (featureCounts)
-- Abundance w/ tximport (for pseudoaligners)
-
-# Normalization
-- References
-    - https://www.nature.com/articles/s41598-020-76881-x
-    - Gene expression values were represented using the normalization techniques provided by 
-      each algorithm: Fragments per Kilobase of Mapped reads (FPKM), Transcripts per Million 
-      (TPM), Trimmed Mean of M values (TMM from edgeR), Relative Log Expression (RLE from 
-      DESeq2), upper quartile (UQ), coverage (Cov), estimated counts (Est_Counts) and 
-      effective counts (Eff_Counts). 
-      
-    
-### Read this to set up short paths...
-https://askubuntu.com/questions/402353/how-to-add-home-username-bin-to-path 
-
-# Data
-https://www.ncbi.nlm.nih.gov/bioproject/PRJNA751390
-https://www.ncbi.nlm.nih.gov/sra?linkname=bioproject_sra_all&from_uid=751390
-Select all samples for SRA selector
-## Whole genome sequencing & RNA sequencing of human well differentiated liposarcoma
-SRR15320001
-SRR15320004
-SRR15320005
-SRR15320006
-SRR15320007
-SRR15320009
-SRR15320010
-SRR15320008
-SRR15320012
-SRR15320011
-SRR15320002
-
 
 ```{bash STAR, eval=FALSE}
 
@@ -241,10 +191,6 @@ done < ../SRR_Acc_List.txt
 
 # Differential Expression Analysis
 
----
-
-# Library
-
 ```{r Library, message=FALSE}
 
 # Library
@@ -261,12 +207,7 @@ library(ggrepel)
 
 ```
 
-
----
-
 ```{r Kallisto preprocessing}
-
-# Convert kallisto abundance.tsv (or abundance.h5) files into a gene count format for analysis using either DESeq2
 
 # Import ensembla annotations for the human genome
 mart <- biomaRt::useMart(biomart = "ensembl", dataset =  "hsapiens_gene_ensembl")
@@ -284,6 +225,7 @@ bio_df <- bio_mart_df %>%
   dplyr::select(-ensembl_transcript_id, -transcript_version)
 head(bio_df)
 
+# Convert kallisto abundance.tsv (or abundance.h5) files into a gene count format for analysis using either DESeq2
 # Use tximport to summarize transcript counts into gene counts
 kallisto_names <- list.dirs("/Users/sha/Desktop/work/rna_seq/data/align/",  full.names = FALSE)[-1]
 kallisto_dir <- list.dirs("/Users/sha/Desktop/work/rna_seq/data/align/", full.names = TRUE)[-1]
@@ -456,7 +398,6 @@ deseq_pca_1
 
 ```
 
-
 ```{r DESeq2 run analysis}
 
 # Make sure that normal is the first level in the sample factor
@@ -484,67 +425,84 @@ mcols(de_res_df, use.names = TRUE)
 ### Review Summary
 summary(de_res_df, alpha = 0.01)
 
+# Save
+write.table(as.data.frame(de_res_df) %>% tibble::rownames_to_column("gene_symbol"),
+            "./deseq2_liposarcoma_results.txt", sep = "\t", row.names = F, quote = F)
+
 ```
 
-```{r DESeq2 significance distribution and lfcshrink, warning=FALSE}
+```{r DESeq2 significance wald test, warning=FALSE}
 
-### Plot p-values for distribution check 
+# Visualize significance
+# Use adjusted p value threshold of 0.1 due to low number of significanlty regulated genes
+# Also indicate genes of interest
+vol_df <- as.data.frame(de_res_df) %>%
+  tibble::rownames_to_column("gene_symbol") %>%
+  mutate(threshold = case_when(log2FoldChange > 0 & padj < 0.1 ~ "up_sig",
+                               log2FoldChange < 0 & padj < 0.1 ~ "down_sig",
+                               TRUE ~ "not_sig"))
+
+# Volcano plot
+vol_plot <- ggplot(vol_df, aes(x = log2FoldChange, y = -log10(pvalue))) +
+  geom_point(aes(col = threshold), size = 1, alpha = 0.9) +
+  ggtitle("Liposarcoma vs. Normal Fat") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.grid.major = element_line()) +
+  scale_colour_manual(values = c("red3", "grey", "blue", "black"), 
+                       breaks = c("up_sig", "not_sig", "down_sig", "other"),
+                       labels = c("Up", "N.S.", "Down", "Other")) +
+  geom_text_repel(data = filter(vol_df, padj < 0.1 | gene_symbol %in% c("CDK4", "MDM2", "PPARG", "CEBPA")),
+                  aes(label = gene_symbol), size = 2) +
+  labs(col = "Significance\np.adj < 0.1")
+vol_plot
+
+```
+
+```{r DESeq2 shrinkage of logFC estimates, warning=FALSE}
+
+# Apply shrinkage to logFC 
+# See difference in visualization
 
 # Calculate row means across samples 
 mean_norm <-  rowMeans(counts(de_final_df, normalized=TRUE)[, de_final_df$tissue == "Liposarcoma"])
-mea_tumor <-  rowMeans(counts(de_final_df, normalized=TRUE)[, de_final_df$tissue == "Normal_fat"])
+mean_tumor <-  rowMeans(counts(de_final_df, normalized=TRUE)[, de_final_df$tissue == "Normal_fat"])
 
 ### Normal vs. Tumor
 # Log Fold change
 lfc_comp <- lfcShrink(de_final_df, coef = "tissue_Liposarcoma_vs_Normal_fat", type = "apeglm")
 
-# add row names to log fold change data frame 
-lfc_comp <-  cbind(as.data.frame(lfc_comp), mean_norm, mea_tumor)
+# Add row names to log fold change data frame 
+lfc_comp <-  cbind(as.data.frame(lfc_comp), mean_norm, mean_tumor)
 
-# Plot histogram to review distribution
-ggplot(data = lfc_comp, aes(x = pvalue)) + geom_histogram(binwidth = 0.01)
-ggplot(data = lfc_comp, aes(x = padj)) + geom_histogram(binwidth = 0.01)
-
-
-```
-
-```{r DESeq2 significance and direction, warning=FALSE}
-
-#### Volcano Plots
-
-# Create up, none, down labels for color then plot
-
-# Liposarcoma vs. Normal Fat
-vol_df <- as.data.frame(de_res_df) %>%
+# Visualize significance
+# Use adjusted p value threshold of 0.1 due to low number of significanlty regulated genes
+# Also indicate genes of interest
+lfc_vol_df <- lfc_comp %>%
+  tibble::rownames_to_column("gene_symbol") %>%
   mutate(threshold = case_when(log2FoldChange > 0 & padj < 0.1 ~ "up_sig",
                                log2FoldChange < 0 & padj < 0.1 ~ "down_sig",
-                               TRUE ~ "not_sig")) %>%
-  tibble::rownames_to_column("gene_symbol")
+                               TRUE ~ "not_sig"))
 
-vol_plot <- ggplot(vol_df, aes(x = log2FoldChange, y = -log10(pvalue))) +
-  geom_point(aes(colour = threshold), size=1) +
-  ggtitle("Tumor vs. Normal with DESeq2") + 
-  theme(plot.title = element_text(hjust = 0.5)) +
-  scale_colour_manual(values=c("blue", "grey", "red3"), 
-                       name="p.adj < 0.1",
-                       breaks=c("down_sig", "not_sig", "up_sig"),
-                       labels=c("Down", "None", "Up")) +
-  geom_text_repel(data = filter(vol_df, padj < 0.1 | gene_symbol %in% c("CDK4", "MDM2", "PPARG", "CEBPA")),
-                  aes(label = gene_symbol), size = 2)
-
-vol_plot
-
+# Volcano plot
+lfc_vol_plot <- ggplot(lfc_vol_df, aes(x = log2FoldChange, y = -log10(pvalue))) +
+  geom_point(aes(col = threshold), size = 1, alpha = 0.9) +
+  ggtitle("Liposarcoma vs. Normal Fat") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.grid.major = element_line()) +
+  scale_colour_manual(values = c("red3", "grey", "blue", "black"), 
+                       breaks = c("up_sig", "not_sig", "down_sig", "other"),
+                       labels = c("Up", "N.S.", "Down", "Other")) +
+  geom_text_repel(data = filter(lfc_vol_df, padj < 0.1 | 
+                                  gene_symbol %in% c("CDK4", "MDM2", "PPARG", "CEBPA") |
+                                  log2FoldChange > 2),
+                  aes(label = gene_symbol), size = 2) +
+  labs(col = "Significance\np.adj < 0.1")
+lfc_vol_plot
 
 ```
 
 
-
 ---
 
-
-
----
-
-
-
----
