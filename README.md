@@ -27,9 +27,6 @@ Shaleigh Smith
 - [Subread featureCounts](http://subread.sourceforge.net)
 - [Tximport](https://github.com/mikelove/tximport)
 
-### Normalization
-- Methods
-
 ### Helpful References
 [Comparison of RNA-Seq workflows & analyses](https://www.nature.com/articles/s41598-020-76881-x)
 > Corchete, L.A., Rojas, E.A., Alonso-López, D. et al. Systematic comparison and assessment of RNA-seq procedures for gene expression quantitative analysis. Sci Rep 10, 19737 (2020). https://doi.org/10.1038/s41598-020-76881-x
