@@ -34,4 +34,4 @@ Shaleigh Smith
 ## Differential Expression Analysis 
 - [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html)
 
-### View html preview [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/sas1531/RNA-Seq-Workflow/main/rna_seq_workflow.html).
+### View html preview [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/sas1531/RNA-Seq-Workflow/main/rna_seq_workflow.html)
