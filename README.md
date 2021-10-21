@@ -18,7 +18,7 @@ Shaleigh Smith
 - [BBMap](https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/bbmap-guide/)
 - [Bowtie2](https://github.com/BenLangmead/bowtie2)
 - [BWA](https://github.com/lh3/bwa)
-- [Tophat2](http://ccb.jhu.edu/software/tophat/index.shtml)
+- [Tophat](http://ccb.jhu.edu/software/tophat/index.shtml)
 - [Hisat2](http://daehwankimlab.github.io/hisat2/)
 - [Salmon](https://salmon.readthedocs.io/en/latest/index.html)
 - [Kallisto](https://github.com/pachterlab/kallisto)
@@ -33,3 +33,5 @@ Shaleigh Smith
 
 ## Differential Expression Analysis 
 - [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html)
+
+### View html preview [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/sas1531/RNA-Seq-Workflow/main/rna_seq_workflow.html)
